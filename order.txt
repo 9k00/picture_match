@@ -1,0 +1,150 @@
+private List<String> getImagePathFromSD() { 
+ 
+ // 图片列表 
+ List<String> picList = new ArrayList<String>(); 
+  
+/ 
+  
+ // 得到sd卡内路径 
+  String imagePath = 
+  Environment.getExternalStorageDirectory().toString() 
+  + "/image"; 
+ 
+ // 得到该路径文件夹下所有的文件 
+  File mfile = new File(imagePath); 
+  File[] files = mfile.listFiles(); 
+ 
+ // 将所有的文件存入ArrayList中,并过滤所有图片格式的文件 
+ for (int i = 0; i < files.length; i++) { 
+  File file = files[i]; 
+  if (checkIsImageFile(file.getPath())) { 
+   picList.add(file.getPath()); 
+  } 
+ 
+ } 
+ 
+ // 返回得到的图片列表 
+ return picList; 
+ 
+} 
+ 
+// 检查扩展名，得到图片格式的文件 
+private boolean checkIsImageFile(String fName) { 
+ boolean isImageFile = false; 
+ 
+ // 获取扩展名 
+ String FileEnd = fName.substring(fName.lastIndexOf(".") + 1, 
+   fName.length()).toLowerCase(); 
+ if (FileEnd.equals("jpg") || FileEnd.equals("gif") 
+   || FileEnd.equals("png") || FileEnd.equals("jpeg") 
+   || FileEnd.equals("bmp")) { 
+  isImageFile = true; 
+ } else { 
+  isImageFile = false; 
+ } 
+ 
+ return isImageFile; 
+ 
+}  
+
+
+
+
+
+
+
+
+
+
+
+public static void order(String[] args) {   
+  // Set image path
+  String aimpicture =new String();//= "C:\\images\\iphone1.jpeg";
+  String filename1 =new String();//= "C:\\images\\iphone2.jpeg";
+  String filename2 =new String();
+  int ret1,ret2;
+  
+  ret1 = compareFeature(aimpicture, filename1);
+  ret2 = compareFeature(aimpicture, filename2);
+  if (ret2 > ret1) {
+    //System.out.println("Two images are same.");
+  } else {
+   System.out.println("Two images are different.");
+  }
+
+ }
+ 
+ /**
+  * Compare that two images is similar using feature mapping  
+  * @author minikim
+  * @param filename1 - the first image
+  * @param filename2 - the second image
+  * @return integer - count that has the similarity within images 
+  */
+ public static int compareFeature(String filename1, String filename2) {
+  int retVal = 0;
+  long startTime = System.currentTimeMillis();
+  
+  System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+  
+  // Load images to compare
+  Mat img1 = Imgcodecs.imread(filename1, Imgcodecs.CV_LOAD_IMAGE_COLOR);
+  Mat img2 = Imgcodecs.imread(filename2, Imgcodecs.CV_LOAD_IMAGE_COLOR);
+
+  // Declare key point of images
+  MatOfKeyPoint keypoints1 = new MatOfKeyPoint();
+  MatOfKeyPoint keypoints2 = new MatOfKeyPoint();
+  Mat descriptors1 = new Mat();
+  Mat descriptors2 = new Mat();
+
+  // Definition of ORB key point detector and descriptor extractors
+  FeatureDetector detector = FeatureDetector.create(FeatureDetector.ORB); 
+  DescriptorExtractor extractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
+
+  // Detect key points
+  detector.detect(img1, keypoints1);
+  detector.detect(img2, keypoints2);
+  
+  // Extract descriptors
+  extractor.compute(img1, keypoints1, descriptors1);
+  extractor.compute(img2, keypoints2, descriptors2);
+
+  // Definition of descriptor matcher
+  DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
+
+  // Match points of two images
+  MatOfDMatch matches = new MatOfDMatch();
+//  System.out.println("Type of Image1= " + descriptors1.type() + ", Type of Image2= " + descriptors2.type());
+//  System.out.println("Cols of Image1= " + descriptors1.cols() + ", Cols of Image2= " + descriptors2.cols());
+  
+  // Avoid to assertion failed
+  // Assertion failed (type == src2.type() && src1.cols == src2.cols && (type == CV_32F || type == CV_8U)
+  if (descriptors2.cols() == descriptors1.cols()) {
+   matcher.match(descriptors1, descriptors2 ,matches);
+ 
+   // Check matches of key points
+   DMatch[] match = matches.toArray();
+   double max_dist = 0; double min_dist = 100;
+   
+   for (int i = 0; i < descriptors1.rows(); i++) { 
+    double dist = match[i].distance;
+       if( dist < min_dist ) min_dist = dist;
+       if( dist > max_dist ) max_dist = dist;
+   }
+   System.out.println("max_dist=" + max_dist + ", min_dist=" + min_dist);
+   
+      // Extract good images (distances are under 10)
+   for (int i = 0; i < descriptors1.rows(); i++) {
+    if (match[i].distance <= 10) {
+     retVal++;
+    }
+   }
+   System.out.println("matching count=" + retVal);
+  }
+  
+  long estimatedTime = System.currentTimeMillis() - startTime;
+  System.out.println("estimatedTime=" + estimatedTime + "ms");
+  
+  return retVal;
+ }
+}

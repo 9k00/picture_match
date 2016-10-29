@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Photos Location</string>
+    <string name="hello_world">Hello world!</string>
+     <string name="action_settings">Settings</string>
+    <string name="Capture">Capture</string>
+    <string name="showImg">position information</string>
+    <string name="Match">location</string>
+    <string name="showmatch">Matching details</string>
+ 	<string name="button1">Location</string>
+ 	<string name="button2">Building</string>
+ 	<string name="locate">Please click on the position information to obtain the current location</string>
+</resources>
